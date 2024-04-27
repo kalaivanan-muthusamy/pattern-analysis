@@ -1,3 +1,4 @@
+import React, { useEffect, useState } from 'react';
 import {
   Input,
   Row,
@@ -7,15 +8,15 @@ import {
   Select,
   Button,
   Layout,
+  Card,
 } from 'antd';
 import { Content } from 'antd/es/layout/layout';
 import Title from 'antd/es/typography/Title';
-import { useEffect, useState } from 'react';
-import JSONData from './components/JSONData';
 import axios from 'axios';
 import Chart from './components/Chart';
 import Patterns from './components/Patterns';
-import { formatCandle } from './modules/candle';
+import { ICandle, processCandles } from './modules/candle';
+import ProcessedCandles from './components/CandleData';
 
 const { RangePicker } = DatePicker;
 
@@ -24,16 +25,20 @@ function App() {
     interval: '8h',
     symbol: 'BTCUSDT',
     timerange: null,
+    candleLength: '',
+    showOnlyLastCandleResult: true,
   });
-  const [ohlc, setOHLC] = useState(null);
+  const [ohlc, setOHLC] = useState<null | Array<string | number>[]>(null);
+  const [activeOHLC, setActiveOHLC] = useState<null | Array<string | number>[]>(null);
+  const [candles, setCandles] = useState<null | ICandle[]>(null);
 
   function onFormInputChange(type, e) {
     setFormValue((current) => ({ ...current, [type]: e.target.value }));
   }
 
-  useEffect(() => {
-    console.log(formatCandle);
-  },[])
+  function onFormCheckboxChange(type, e) {
+    setFormValue((current) => ({ ...current, [type]: e.target.checked }));
+  }
 
   async function onFinish() {
     const startTime = formValue.timerange?.[0]?.valueOf();
@@ -47,7 +52,39 @@ function App() {
         limit: 100,
       },
     });
+    let candleData: Array<string | number>[] = res.data || [];
+    const candleLength = formValue.candleLength;
+    if (candleLength) {
+      const [start, end] = candleLength.split(",");
+      const startIndex = parseInt(start);
+      const endIndex = parseInt(end);
+      if (!isNaN(startIndex) && !isNaN(endIndex)) {
+        candleData = candleData.slice(startIndex, endIndex);
+      }
+    }
     setOHLC(res.data || []);
+    setActiveOHLC(candleData);
+    getCandlePatterns(candleData);
+  }
+
+  useEffect(() => {
+    let candleData: Array<string | number>[] = ohlc || [];
+    const candleLength = formValue.candleLength;
+    if (candleLength) {
+      const [start, end] = candleLength.split(",");
+      const startIndex = parseInt(start);
+      const endIndex = parseInt(end);
+      if (!isNaN(startIndex) && !isNaN(endIndex)) {
+        candleData = candleData.slice(startIndex, endIndex);
+        setActiveOHLC(candleData);
+        getCandlePatterns(candleData);
+      }
+    }
+  }, [formValue.candleLength])
+
+  function getCandlePatterns(data) {
+    const candles = processCandles(data);
+    setCandles(candles);
   }
 
   return (
@@ -55,69 +92,89 @@ function App() {
       <Content style={{ padding: '24px 24px' }}>
         <Title>Pattern Analysis</Title>
         <Row>
-          <Col>
-            <Form layout="inline" onFinish={onFinish}>
-              <Form.Item label="Symbol">
-                <Input
-                  placeholder="BTCUSDT"
-                  value={formValue.symbol}
-                  onChange={(e) => onFormInputChange('symbol', e)}
-                />
-              </Form.Item>
-              <Form.Item label="Time Range">
-                <RangePicker
-                  showTime={{ format: 'HH' }}
-                  // minuteStep={30}
-                  showMinute={false}
-                  showHour={true}
-                  hourStep={2}
-                  format="YYYY-MM-DD HH"
-                  value={formValue.timerange}
-                  onChange={(value, dateString) => {
-                    setFormValue((current) => ({
-                      ...current,
-                      timerange: value,
-                    }));
-                  }}
-                />
-              </Form.Item>
-              <Form.Item label="interval" rules={[{ required: true }]}>
-                <Select
-                  value={formValue.interval}
-                  placeholder="Select interval"
-                  onChange={(value) =>
-                    setFormValue((current) => ({
-                      ...current,
-                      interval: value,
-                    }))
-                  }
-                >
-                  <Option value="4h">4h</Option>
-                  <Option value="8h">8h</Option>
-                  <Option value="1d">1d</Option>
-                  <Option value="3d">3d</Option>
-                  <Option value="1w">1w</Option>
-                  <Option value="1M">1M</Option>
-                </Select>
-              </Form.Item>
-              <Form.Item>
-                <Button htmlType="submit" type="primary">
-                  Find Patterns
-                </Button>
-              </Form.Item>
-            </Form>
+          <Col sm={24}>
+            <Card>
+              <Form layout="inline" onFinish={onFinish}>
+                <Form.Item label="Symbol">
+                  <Input
+                    placeholder="BTCUSDT"
+                    value={formValue.symbol}
+                    onChange={(e) => onFormInputChange('symbol', e)}
+                  />
+                </Form.Item>
+                <Form.Item label="Time Range">
+                  <RangePicker
+                    showTime={{ format: 'HH' }}
+                    // minuteStep={30}
+                    showMinute={false}
+                    showHour={true}
+                    hourStep={2}
+                    format="YYYY-MM-DD HH"
+                    value={formValue.timerange}
+                    onChange={(value, dateString) => {
+                      setFormValue((current) => ({
+                        ...current,
+                        timerange: value,
+                      }));
+                    }}
+                  />
+                </Form.Item>
+                <Form.Item label="interval" rules={[{ required: true }]}>
+                  <Select
+                    value={formValue.interval}
+                    placeholder="Select interval"
+                    onChange={(value) =>
+                      setFormValue((current) => ({
+                        ...current,
+                        interval: value,
+                      }))
+                    }
+                  >
+                    <Option value="4h">4h</Option>
+                    <Option value="8h">8h</Option>
+                    <Option value="1d">1d</Option>
+                    <Option value="3d">3d</Option>
+                    <Option value="1w">1w</Option>
+                    <Option value="1M">1M</Option>
+                  </Select>
+                </Form.Item>
+                <Form.Item>
+                  <Button htmlType="submit" type="primary">
+                    Analyse
+                  </Button>
+                </Form.Item>
+              </Form>
+              <Form style={{ marginTop: '20px' }} layout="inline" >
+                <Form.Item label="Candle Length">
+                  <Input
+                    size='small'
+                    placeholder="0,-1"
+                    value={formValue.candleLength}
+                    onChange={(e) => onFormInputChange('candleLength', e)}
+                  />
+                </Form.Item>
+                <Form.Item label="Show last candle result only ">
+                  <Input
+                    type="checkbox"
+                    checked={formValue.showOnlyLastCandleResult}
+                    onChange={(e) => onFormCheckboxChange('showOnlyLastCandleResult', e)}
+
+                  />
+                </Form.Item>
+              </Form>
+            </Card>
           </Col>
         </Row>
 
         <Row gutter={8} style={{ marginTop: '30px' }}>
           <Col sm={12}>
-            <Chart data={ohlc} />
-          </Col>
-          <Col sm={7}>
-            <Patterns data={ohlc} />
+            <Chart data={activeOHLC} />
           </Col>
           <Col sm={5}>
-            <JSONData data={ohlc} />
+            <Patterns data={activeOHLC} />
+          </Col>
+          <Col sm={7}>
+            <ProcessedCandles data={formValue.showOnlyLastCandleResult ? candles?.slice(-1) : candles} />
           </Col>
         </Row>
       </Content>

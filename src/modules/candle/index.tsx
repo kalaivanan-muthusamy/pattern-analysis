@@ -1,6 +1,6 @@
 import { CandleType } from "./constants";
 
-export interface Candle {
+export interface IBasicCandle {
     openTime: Date;
     open: number;
     high: number;
@@ -13,12 +13,40 @@ export interface Candle {
     candleType: CandleType;
     priceMovement: number;
     amplitude: number;
-    bodyWidthPercentage: number;
-    topWickWidthPercentage: number;
-    bottomWickWidthPercentage: number;
+    bodyWeight: number;
+    topWickWeight: number;
+    bottomWickWeight: number;
 }
 
-export function formatCandle(candleValues: Array<string | number>): Candle {
+enum CandleImpact {
+    Low = 'Low',
+    Medium = 'Medium',
+    High = 'High',
+    Critical = 'Critical'
+}
+
+interface CalculatedStats {
+    min: number;
+    max: number;
+    avg: number;
+    mid: number;
+    value60: number;
+    value80: number;
+    isAboveAverage: boolean;
+    isMax: boolean;
+    isMin: boolean;
+    impact: CandleImpact
+}
+
+export interface ICandle extends IBasicCandle {
+    priceMovementStats: CalculatedStats;
+    amplitudeStats: CalculatedStats;
+    tradeCountStats: CalculatedStats;
+    volumeStats: CalculatedStats;
+    impact: CandleImpact
+}
+
+export function formatCandle(candleValues: Array<string | number>): IBasicCandle {
     /**
      * Sample candle values
      * 
@@ -49,8 +77,8 @@ export function formatCandle(candleValues: Array<string | number>): Candle {
     const candleType = close >= open ? CandleType.Green : CandleType.Red;
 
     // 2. Calculate Price Movement and Amplitude
-    let amplitude = null;
-    let priceMovement = null;
+    let amplitude: number;
+    let priceMovement: number;
     if (candleType === CandleType.Green) {
         amplitude = (Math.abs(low - high) / low) * 100;
         priceMovement = (Math.abs(open - close) / open) * 100;
@@ -65,9 +93,9 @@ export function formatCandle(candleValues: Array<string | number>): Candle {
     const topWickWidth = high - Math.max(open, close);
     const bottomWickWidth = Math.min(open, close) - low;
 
-    const bodyWidthPercentage = (bodyWidth / totalRange) * 100;
-    const topWickWidthPercentage = (topWickWidth / totalRange) * 100;
-    const bottomWickWidthPercentage = (bottomWickWidth / totalRange) * 100;
+    const bodyWeight = (bodyWidth / totalRange) * 100;
+    const topWickWeight = (topWickWidth / totalRange) * 100;
+    const bottomWickWeight = (bottomWickWidth / totalRange) * 100;
 
     return {
         openTime: new Date(candle[0]),
@@ -80,31 +108,97 @@ export function formatCandle(candleValues: Array<string | number>): Candle {
         quoteAssetvolume: candle[7],
         noOfTrades: candle[8],
         candleType,
-        bodyWidthPercentage: parseFloat(bodyWidthPercentage.toFixed(2)),
-        topWickWidthPercentage: parseFloat(topWickWidthPercentage.toFixed(2)),
-        bottomWickWidthPercentage: parseFloat(bottomWickWidthPercentage.toFixed(2)),
+        bodyWeight: parseFloat(bodyWeight.toFixed(2)),
+        topWickWeight: parseFloat(topWickWeight.toFixed(2)),
+        bottomWickWeight: parseFloat(bottomWickWeight.toFixed(2)),
         amplitude: parseFloat(amplitude.toFixed(2)),
         priceMovement: parseFloat(priceMovement.toFixed(2)),
     };
 }
 
-export function processCandles(candles: Candle[]) {
-    
+export function processCandles(candleValues: Array<string | number>[], avgLength = 14): ICandle[] {
+    const allCandles = candleValues.map(candle => formatCandle(candle)) as ICandle[];
+
+    // Calculate the min, max and avg values for price movement, amplitude, trades, volume
+    for (let i = avgLength; i < allCandles.length; i++) {
+        const pastCandles = allCandles.slice(i - avgLength, i);
+        const activeCandle = allCandles[i];
+
+        const priceMovementStats = calculateStats(pastCandles, activeCandle, 'priceMovement');
+        activeCandle.priceMovementStats = { ...priceMovementStats }
+
+        const amplitudeStats = calculateStats(pastCandles, activeCandle, 'amplitude');
+        activeCandle.amplitudeStats = { ...amplitudeStats }
+
+        const tradeCountStats = calculateStats(pastCandles, activeCandle, 'noOfTrades');
+        activeCandle.tradeCountStats = { ...tradeCountStats }
+
+        const volumeStats = calculateStats(pastCandles, activeCandle, 'baseAssetvolume');
+        activeCandle.volumeStats = { ...volumeStats }
+
+        // Calculate candle impact
+        let impact = CandleImpact.Low;
+        if (
+            amplitudeStats.impact === CandleImpact.Critical &&
+            (volumeStats.impact === CandleImpact.Critical || tradeCountStats.impact === CandleImpact.Critical)
+        ) {
+            impact = CandleImpact.Critical;
+        } else if (
+            amplitudeStats.impact === CandleImpact.High &&
+            (matchImpact(volumeStats.impact, CandleImpact.High) || matchImpact(tradeCountStats.impact, CandleImpact.High))
+        ) {
+            impact = CandleImpact.High;
+        } else if (
+            amplitudeStats.impact === CandleImpact.Medium &&
+            (matchImpact(volumeStats.impact, CandleImpact.Medium) || matchImpact(tradeCountStats.impact, CandleImpact.Medium))
+        ) {
+            impact = CandleImpact.Medium;
+        }
+        activeCandle.impact = impact;
+    }
+    return allCandles;
 }
 
-const candle = [
-    1714060800000,
-    "64135.93000000",
-    "65297.94000000",
-    "63971.48000000",
-    "64498.34000000",
-    "9681.66424000",
-    1714089599999,
-    "625659924.58536440",
-    420926,
-    "4620.21784000",
-    "298531589.85404570",
-    "0"
-];
+function calculateStats(allCandles: ICandle[], candle: ICandle, key: string) {
+    const values = allCandles.map(candle => candle[key]);
+    const current = candle[key];
+    const min = Math.min(...values);
+    const max = Math.max(...values);
+    const avg = values.reduce((acc, pm) => acc + pm, 0) / values.length;
+    const mid = min + 0.5 * (max - min);
+    const value60 = min + 0.6 * (max - min);
+    const value80 = min + 0.8 * (max - min);
+    let impact = CandleImpact.Low;
+    if (current > value80) {
+        impact = CandleImpact.Critical
+    } else if (current > value60) {
+        impact = CandleImpact.High
+    } else if (current > avg || current > mid) {
+        impact = CandleImpact.Medium
+    }
+    return {
+        current,
+        min,
+        max,
+        avg,
+        mid,
+        value60,
+        value80,
+        isAboveAverage: candle[key] > avg,
+        isMax: candle[key] >= max,
+        isMin: candle[key] <= min,
+        impact
+    }
+}
 
-console.log(formatCandle(candle));
+function matchImpact(impact: CandleImpact, match: CandleImpact) {
+    const impactToMatch = [match];
+    if (match === CandleImpact.High) {
+        impactToMatch.push(CandleImpact.Critical);
+    } else if (match === CandleImpact.Medium) {
+        impactToMatch.push(CandleImpact.High, CandleImpact.Critical)
+    } else if (match === CandleImpact.Low) {
+        impactToMatch.push(CandleImpact.Medium, CandleImpact.High, CandleImpact.Critical)
+    }
+    return impactToMatch.includes(impact)
+}
