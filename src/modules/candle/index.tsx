@@ -1,4 +1,4 @@
-import { CandleType } from "./constants";
+import { CandleImpact, CandleType } from "./constants";
 
 export interface IBasicCandle {
     openTime: Date;
@@ -16,13 +16,6 @@ export interface IBasicCandle {
     bodyWeight: number;
     topWickWeight: number;
     bottomWickWeight: number;
-}
-
-enum CandleImpact {
-    Low = 'Low',
-    Medium = 'Medium',
-    High = 'High',
-    Critical = 'Critical'
 }
 
 interface CalculatedStats {
@@ -119,7 +112,7 @@ export function formatCandle(candleValues: Array<string | number>): IBasicCandle
 export function processCandles(candleValues: Array<string | number>[], avgLength = 14): ICandle[] {
     const allCandles = candleValues.map(candle => formatCandle(candle)) as ICandle[];
 
-    // Calculate the min, max and avg values for price movement, amplitude, trades, volume
+    // Calculate the min, max and avg values for price movement, amplitude, trades and volume
     for (let i = avgLength; i < allCandles.length; i++) {
         const pastCandles = allCandles.slice(i - avgLength, i);
         const activeCandle = allCandles[i];
@@ -136,32 +129,14 @@ export function processCandles(candleValues: Array<string | number>[], avgLength
         const volumeStats = calculateStats(pastCandles, activeCandle, 'baseAssetvolume');
         activeCandle.volumeStats = { ...volumeStats }
 
-        // Calculate candle impact
-        let impact = CandleImpact.Low;
-        if (
-            amplitudeStats.impact === CandleImpact.Critical &&
-            (volumeStats.impact === CandleImpact.Critical || tradeCountStats.impact === CandleImpact.Critical)
-        ) {
-            impact = CandleImpact.Critical;
-        } else if (
-            amplitudeStats.impact === CandleImpact.High &&
-            (matchImpact(volumeStats.impact, CandleImpact.High) || matchImpact(tradeCountStats.impact, CandleImpact.High))
-        ) {
-            impact = CandleImpact.High;
-        } else if (
-            amplitudeStats.impact === CandleImpact.Medium &&
-            (matchImpact(volumeStats.impact, CandleImpact.Medium) || matchImpact(tradeCountStats.impact, CandleImpact.Medium))
-        ) {
-            impact = CandleImpact.Medium;
-        }
-        activeCandle.impact = impact;
+        activeCandle.impact = getCandleImpact(activeCandle);
     }
     return allCandles;
 }
 
-function calculateStats(allCandles: ICandle[], candle: ICandle, key: string) {
-    const values = allCandles.map(candle => candle[key]);
-    const current = candle[key];
+function calculateStats(allCandles: ICandle[], candle: ICandle, key: keyof ICandle) {
+    const values = allCandles.map(candle => candle[key]) as number[];
+    const current = candle[key] as number;
     const min = Math.min(...values);
     const max = Math.max(...values);
     const avg = values.reduce((acc, pm) => acc + pm, 0) / values.length;
@@ -184,21 +159,37 @@ function calculateStats(allCandles: ICandle[], candle: ICandle, key: string) {
         mid,
         value60,
         value80,
-        isAboveAverage: candle[key] > avg,
-        isMax: candle[key] >= max,
-        isMin: candle[key] <= min,
+        isAboveAverage: current > avg,
+        isMax: current >= max,
+        isMin: current <= min,
         impact
     }
 }
 
-function matchImpact(impact: CandleImpact, match: CandleImpact) {
-    const impactToMatch = [match];
-    if (match === CandleImpact.High) {
-        impactToMatch.push(CandleImpact.Critical);
-    } else if (match === CandleImpact.Medium) {
-        impactToMatch.push(CandleImpact.High, CandleImpact.Critical)
-    } else if (match === CandleImpact.Low) {
-        impactToMatch.push(CandleImpact.Medium, CandleImpact.High, CandleImpact.Critical)
+function getCandleImpact(candle: ICandle) {
+    const metricImpacts = [candle.amplitudeStats.impact, candle.volumeStats.impact, candle.tradeCountStats.impact];
+    const maxOccurance = getMaxOccurance(metricImpacts) as CandleImpact;
+    const maxOccuranceLength = metricImpacts.filter(v => v === maxOccurance).length;
+    if (maxOccuranceLength > 1) {
+        return maxOccurance
+    } else {
+        return candle.amplitudeStats.impact
     }
-    return impactToMatch.includes(impact)
+}
+
+function getMaxOccurance(array: string[]) {
+    var modeMap = {} as { [key: string]: number };
+    var maxEl = array[0], maxCount = 1;
+    for (var i = 0; i < array.length; i++) {
+        var el = array[i];
+        if (modeMap[el] == null)
+            modeMap[el] = 1;
+        else
+            modeMap[el]++;
+        if (modeMap[el] > maxCount) {
+            maxEl = el;
+            maxCount = modeMap[el];
+        }
+    }
+    return maxEl;
 }

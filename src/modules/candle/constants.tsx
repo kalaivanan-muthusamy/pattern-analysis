@@ -16,7 +16,8 @@ export enum PatternType {
 }
 
 export enum CandleImpact {
-  Low = 'LOW',
-  Medium = 'MEDIUM',
-  High = 'HIGH',
+  Low = 'Low',
+  Medium = 'Medium',
+  High = 'High',
+  Critical = 'Critical'
 }

@@ -17,6 +17,7 @@ import Chart from './components/Chart';
 import Patterns from './components/Patterns';
 import { ICandle, processCandles } from './modules/candle';
 import ProcessedCandles from './components/CandleData';
+import { PatternResult, getCandlestickPatterns } from './modules/patterns';
 
 const { RangePicker } = DatePicker;
 
@@ -31,6 +32,7 @@ function App() {
   const [ohlc, setOHLC] = useState<null | Array<string | number>[]>(null);
   const [activeOHLC, setActiveOHLC] = useState<null | Array<string | number>[]>(null);
   const [candles, setCandles] = useState<null | ICandle[]>(null);
+  const [patterns, setPatterns] = useState<Array<PatternResult | null> | null>(null)
 
   function onFormInputChange(type, e) {
     setFormValue((current) => ({ ...current, [type]: e.target.value }));
@@ -82,8 +84,14 @@ function App() {
     }
   }, [formValue.candleLength])
 
-  function getCandlePatterns(data) {
+  function getCandlePatterns(data: Array<string | number>[]) {
     const candles = processCandles(data);
+    let patterns: any = [];
+    candles.map((candle, index) => {
+      const result = getCandlestickPatterns(candle, candles.slice(0, index));
+      patterns.push(result);
+    })
+    setPatterns(patterns);
     setCandles(candles);
   }
 
@@ -171,7 +179,7 @@ function App() {
             <Chart data={activeOHLC} />
           </Col>
           <Col sm={5}>
-            <Patterns data={activeOHLC} />
+            <Patterns data={patterns} />
           </Col>
           <Col sm={7}>
             <ProcessedCandles data={formValue.showOnlyLastCandleResult ? candles?.slice(-1) : candles} />
