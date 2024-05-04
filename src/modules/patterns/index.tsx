@@ -83,8 +83,8 @@ export const CORE_PATTERNS = {
             candle &&
             candle.candleType === CandleType.Red &&
             candle.bodyWeight >= 90 &&
-            candle.bottomWickWeight <= 5 &&
-            candle.topWickWeight <= 5
+            candle.bottomWickWeight <= 10 &&
+            candle.topWickWeight <= 10
         );
     },
 };
@@ -93,7 +93,7 @@ export const CORE_PATTERNS = {
 export const PATTERNS = [
     /**
      * *******************************
-     * Single ICandle Patterns
+     * Single Candlestick Patterns
      * *******************************
      */
 
@@ -331,10 +331,91 @@ export const PATTERNS = [
             return null;
         },
     },
+    {
+        id: 'S009',
+        name: 'Support',
+        futurePotential: FuturePotential.Bullish,
+        patternType: PatternType.SingleCandle,
+        parser: (candle: ICandle, pastCandles: ICandle[] = []): PatternResult | null => {
+            if (
+                candle &&
+                candle.bottomWickWeight >= 50 &&
+                candle.bodyWeight >= 25
+            ) {
+                return {
+                    impact: candle.impact,
+                };
+            }
+            return null;
+        },
+    },
+    {
+        id: 'S010',
+        name: 'Rejection',
+        futurePotential: FuturePotential.Bearish,
+        patternType: PatternType.SingleCandle,
+        parser: (candle: ICandle, pastCandles: ICandle[] = []): PatternResult | null => {
+            if (
+                candle &&
+                candle.topWickWeight >= 50 &&
+                candle.bodyWeight >= 25
+            ) {
+                return {
+                    impact: candle.impact,
+                };
+            }
+            return null;
+        },
+    },
+    {
+        id: 'S011',
+        name: 'Critical Support',
+        futurePotential: FuturePotential.Bearish,
+        patternType: PatternType.SingleCandle,
+        parser: (candle: ICandle, pastCandles: ICandle[] = []): PatternResult | null => {
+            if (
+                candle &&
+                candle.amplitudeStats &&
+                candle.candleType === CandleType.Green && 
+                candle.bodyWeight >= 35 &&
+                candle.topWickWeight <= 45 &&
+                candle.amplitudeStats.impact === CandleImpact.Critical &&
+                (candle.tradeCountStats.impact === CandleImpact.Critical ||
+                    candle.priceMovementStats.impact === CandleImpact.Critical)
+            ) {
+                return {
+                    impact: candle.impact,
+                };
+            }
+            return null;
+        },
+    },
+    {
+        id: 'S011',
+        name: 'Critical Rejection',
+        futurePotential: FuturePotential.Bearish,
+        patternType: PatternType.SingleCandle,
+        parser: (candle: ICandle, pastCandles: ICandle[] = []): PatternResult | null => {
+            if (
+                candle &&
+                candle.amplitudeStats &&
+                candle.candleType === CandleType.Red && 
+                candle.bottomWickWeight <= 45 &&
+                candle.amplitudeStats.impact === CandleImpact.Critical &&
+                (candle.tradeCountStats.impact === CandleImpact.Critical ||
+                    candle.priceMovementStats.impact === CandleImpact.Critical)
+            ) {
+                return {
+                    impact: candle.impact,
+                };
+            }
+            return null;
+        },
+    },
 
     /**
      * *******************************
-     * Two ICandle Patterns
+     * Two Candlestick Patterns
      * *******************************
      */
 
@@ -424,11 +505,11 @@ export const PATTERNS = [
             const previousCandle = pastCandles[pastCandles.length - 1];
             if (
                 previousCandle &&
-                previousCandle.bottomWickWeight >= 60 &&
-                previousCandle.topWickWeight <= 25 &&
+                previousCandle.bottomWickWeight >= 50 &&
+                previousCandle.bodyWeight >= 25 &&
                 currentCandle &&
-                currentCandle.bottomWickWeight >= 60 &&
-                currentCandle.topWickWeight <= 25
+                currentCandle.bottomWickWeight >= 50 &&
+                currentCandle.bodyWeight >= 25
             ) {
                 return {
                     impact: candle.impact,
@@ -447,11 +528,11 @@ export const PATTERNS = [
             const previousCandle = pastCandles[pastCandles.length - 1];
             if (
                 previousCandle &&
-                previousCandle.topWickWeight >= 60 &&
-                previousCandle.bottomWickWeight <= 25 &&
+                previousCandle.topWickWeight >= 50 &&
+                previousCandle.bodyWeight >= 25 &&
                 currentCandle &&
-                currentCandle.topWickWeight >= 60 &&
-                currentCandle.bottomWickWeight <= 25
+                currentCandle.topWickWeight >= 50 &&
+                currentCandle.bodyWeight >= 25
             ) {
                 return {
                     impact: candle.impact,
@@ -460,98 +541,19 @@ export const PATTERNS = [
             return null;
         },
     },
-    /**
-     * Tweezer Bottom - D003
-     *
-     * Identification:
-     * A Tweezer Bottom is a bullish reversal candlestick pattern formed by two consecutive
-     * candlesticks with almost equal low prices. The first candle is typically bearish, and
-     * the second is bullish, creating a pattern that resembles tweezer bottoms at the
-     * bottom of a downtrend.
-     *
-     * Direction:
-     * The Tweezer Bottom pattern suggests potential exhaustion in a downtrend, indicating that
-     * sellers are struggling to push the price lower. The equal lows signal a level of support,
-     * and the reversal is confirmed by the bullish candle that follows, indicating a shift in
-     * momentum.
-     */
-
-    // {
-    //   id: 'D003',
-    //   name: 'Tweezers Bottom',
-    //   futurePotential: FuturePotential.Bullish,
-    //   patternType: PatternType.DoubleCandle,
-    //   parser: (candle: ICandle, pastCandles: ICandle[] = []): PatternResult | null => {
-    //     const currentCandle = candle;
-    //     const previousCandle = pastCandles[pastCandles.length - 1];
-    //     if (
-    //       previousCandle &&
-    //       previousCandle.candleColor === CandleColor.Red &&
-    //       previousCandle.bodyWeight >= 40 &&
-    //       currentCandle &&
-    //       currentCandle.candleColor === CandleColor.Green &&
-    //       currentCandle.bodyWeight >= 40 &&
-    //       currentCandle.close >= previousCandle.open
-    //     ) {
-    //       return {
-    //         impact: candle.impact,
-    //       };
-    //     }
-    //     return null;
-    //   },
-    // },
-    /**
-     * Tweezer Top - D004
-     *
-     * Identification:
-     * A Tweezer Top is a bearish reversal candlestick pattern formed by two consecutive
-     * candlesticks with almost equal high prices. The first candle is typically bullish,
-     * and the second is bearish, creating a pattern that resembles tweezer peaks at the
-     * top of an uptrend
-     *
-     * Direction:
-     * The Tweezer Top pattern suggests potential exhaustion in an uptrend, indicating that
-     * buyers are struggling to push the price higher. The equal highs signal a level of
-     * resistance, and the reversal is confirmed by the bearish candle that follows,
-     * indicating a shift in momentum
-     */
-    // {
-    //   id: 'D004',
-    //   name: 'Tweezers Top',
-    //   futurePotential: FuturePotential.Bearish,
-    //   patternType: PatternType.DoubleCandle,
-    //   parser: (candle: ICandle, pastCandles: ICandle[] = []): PatternResult | null => {
-    //     const currentCandle = candle;
-    //     const previousCandle = pastCandles[pastCandles.length - 1];
-    //     if (
-    //       previousCandle &&
-    //       previousCandle.candleColor === CandleColor.Green &&
-    //       previousCandle.bodyWeight >= 40 &&
-    //       currentCandle &&
-    //       currentCandle.candleColor === CandleColor.Red &&
-    //       currentCandle.bodyWeight >= 40 &&
-    //       currentCandle.close <= previousCandle.open
-    //     ) {
-    //       return {
-    //         impact: candle.impact,
-    //       };
-    //     }
-    //     return null;
-    //   },
-    // },
 
     /**
      * *******************************
-     * Three or More ICandle Patterns
+     * Three or More Candlestick Patterns
      * *******************************
      */
 
     /**
-     * Morning Start (3 ICandle) - M001
+     * Morning Start (3 Candle) - M001
      */
     {
         id: 'M001',
-        name: 'Morning Start (3 ICandle)',
+        name: 'Morning Start (3 Candle)',
         futurePotential: FuturePotential.Bullish,
         patternType: PatternType.MultiCandle,
         parser: (candle: ICandle, pastCandles: ICandle[] = []): PatternResult | null => {
@@ -559,13 +561,13 @@ export const PATTERNS = [
             const secondCandle = pastCandles[pastCandles.length - 1];
             const currentCandle = candle;
             if (
-                // First ICandle
+                // First Candle
                 firstCandle &&
                 firstCandle.candleType === CandleType.Red &&
                 firstCandle.bodyWeight >= 55 &&
-                // Second ICandle - Long-Legged Doji/Spinning Top
+                // Second Candle - Long-Legged Doji/Spinning Top
                 (CORE_PATTERNS.LongLeggedDoji(secondCandle) || CORE_PATTERNS.SpinningTop(secondCandle)) &&
-                // Third ICandle
+                // Third Candle
                 currentCandle.candleType === CandleType.Green &&
                 currentCandle.bodyWeight >= 60
             ) {
@@ -577,11 +579,11 @@ export const PATTERNS = [
         },
     },
     /**
-     * Three Line Strike (4 ICandle) - M002
+     * Three Line Strike (4 Candle) - M002
      */
     {
         id: 'M002',
-        name: 'Three Line Strike (4 ICandle)',
+        name: 'Three Line Strike (4 Candle)',
         futurePotential: FuturePotential.Bullish,
         patternType: PatternType.MultiCandle,
         parser: (candle: ICandle, pastCandles: ICandle[] = []): PatternResult | null => {
@@ -596,7 +598,7 @@ export const PATTERNS = [
                 secondCandle.candleType === CandleType.Red &&
                 thirdCandle &&
                 thirdCandle.candleType === CandleType.Red &&
-                // Current ICandle
+                // Current Candle
                 currentCandle.candleType === CandleType.Green &&
                 currentCandle.close >= firstCandle.open &&
                 currentCandle.close >= secondCandle.high &&
@@ -613,11 +615,11 @@ export const PATTERNS = [
         },
     },
     /**
-     * Three ICandle Strike (3 ICandle) - M003
+     * Three Candle Strike (3 ICandle) - M003
      */
     {
         id: 'M003',
-        name: 'Three ICandle Strike (3 ICandle)',
+        name: 'Three Candle Strike (3 Candle)',
         futurePotential: FuturePotential.Bullish,
         patternType: PatternType.MultiCandle,
         parser: (candle: ICandle, pastCandles: ICandle[] = []): PatternResult | null => {
@@ -655,14 +657,14 @@ export const PATTERNS = [
             const firstCandle = pastCandles[pastCandles.length - 2];
             if (
                 firstCandle &&
-                firstCandle.bottomWickWeight >= 60 &&
-                firstCandle.topWickWeight <= 25 &&
+                firstCandle.bottomWickWeight >= 50 &&
+                firstCandle.bodyWeight >= 30 &&
                 secondCandle &&
-                secondCandle.bottomWickWeight >= 60 &&
-                secondCandle.topWickWeight <= 25 &&
+                secondCandle.bottomWickWeight >= 50 &&
+                secondCandle.bodyWeight >= 30 &&
                 currentCandle &&
-                currentCandle.bottomWickWeight >= 60 &&
-                currentCandle.topWickWeight <= 25
+                currentCandle.bottomWickWeight >= 50 &&
+                currentCandle.bodyWeight >= 30
             ) {
                 return {
                     impact: candle.impact,
@@ -682,14 +684,14 @@ export const PATTERNS = [
             const firstCandle = pastCandles[pastCandles.length - 2];
             if (
                 firstCandle &&
-                firstCandle.topWickWeight >= 60 &&
-                firstCandle.bottomWickWeight <= 25 &&
+                firstCandle.topWickWeight >= 50 &&
+                firstCandle.bodyWeight >= 30 &&
                 secondCandle &&
-                secondCandle.topWickWeight >= 60 &&
-                secondCandle.bottomWickWeight <= 25 &&
+                secondCandle.topWickWeight >= 50 &&
+                secondCandle.bodyWeight >= 30 &&
                 currentCandle &&
-                currentCandle.topWickWeight >= 60 &&
-                currentCandle.bottomWickWeight <= 25
+                currentCandle.topWickWeight >= 50 &&
+                currentCandle.bodyWeight >= 30
             ) {
                 return {
                     impact: candle.impact,
@@ -697,74 +699,7 @@ export const PATTERNS = [
             }
             return null;
         },
-    },
-    // {
-    //   id: 'M004',
-    //   name: 'Bullish Tweezers (3 ICandle)',
-    //   futurePotential: FuturePotential.Bullish,
-    //   patternType: PatternType.DoubleCandle,
-    //   parser: (candle: ICandle, pastCandles: ICandle[] = []): PatternResult | null => {
-    //     const currentCandle = candle;
-    //     const secondCandle = pastCandles[pastCandles.length - 1];
-    //     const firstCandle = pastCandles[pastCandles.length - 2];
-    //     if (
-    //       // firstCandle ICandle - Hammer/Hanging Man/Doji
-    //       firstCandle &&
-    //       firstCandle.bodyWeight <= 25 &&
-    //       firstCandle.topWickWeight <= 20 &&
-    //       firstCandle.bottomWickWeight >= 60 &&
-    //       // Second ICandle - Hammer/Hanging Man/Doji
-    //       secondCandle &&
-    //       secondCandle.bodyWeight <= 25 &&
-    //       secondCandle.topWickWeight <= 20 &&
-    //       secondCandle.bottomWickWeight >= 60 &&
-    //       // Current ICandle - Hammer/Hanging Man/Doji
-    //       currentCandle.bodyWeight <= 25 &&
-    //       currentCandle.topWickWeight <= 20 &&
-    //       currentCandle.bottomWickWeight >= 60
-    //     ) {
-    //       return {
-    //         impact: candle.impact,
-    //       };
-    //     }
-    //     return null;
-    //   },
-    // },
-    /**
-     * Spinning Top (3 ICandle) - M005
-     */
-    // {
-    //   id: 'M005',
-    //   name: 'Spinning Top (3 ICandle)',
-    //   futurePotential: FuturePotential.Bullish,
-    //   patternType: PatternType.SingleCandle,
-    //   parser: (candle: ICandle, pastCandles: ICandle[] = []): PatternResult | null => {
-    //     const firstCandle = pastCandles[pastCandles.length - 2];
-    //     const secondCandle = pastCandles[pastCandles.length - 1];
-    //     const currentCandle = candle;
-    //     if (
-    //       // First ICandle
-    //       firstCandle &&
-    //       firstCandle.bodyWeight <= 15 &&
-    //       firstCandle.topWickWeight >= 30 &&
-    //       firstCandle.bottomWickWeight >= 30 &&
-    //       // Second ICandle
-    //       secondCandle &&
-    //       secondCandle.bodyWeight <= 15 &&
-    //       secondCandle.topWickWeight >= 30 &&
-    //       secondCandle.bottomWickWeight >= 30 &&
-    //       // Current ICandle
-    //       currentCandle.bodyWeight <= 15 &&
-    //       currentCandle.topWickWeight >= 30 &&
-    //       currentCandle.bottomWickWeight >= 30
-    //     ) {
-    //       return {
-    //         impact: candle.impact,
-    //       };
-    //     }
-    //     return null;
-    //   },
-    // },
+    }
 ];
 
 /**
