@@ -13,7 +13,7 @@ export const CORE_PATTERNS = {
         return (
             candle &&
             candle.bodyWeight <= 5 &&
-            candle.topWickWeight <= 20 &&
+            candle.topWickWeight <= 25 &&
             candle.bottomWickWeight >= 70
         );
     },
@@ -21,7 +21,7 @@ export const CORE_PATTERNS = {
         return (
             candle &&
             candle.bodyWeight <= 5 &&
-            candle.bottomWickWeight <= 20 &&
+            candle.bottomWickWeight <= 25 &&
             candle.topWickWeight >= 70
         );
     },
@@ -370,15 +370,15 @@ export const PATTERNS = [
     {
         id: 'S011',
         name: 'Critical Support',
-        futurePotential: FuturePotential.Bearish,
+        futurePotential: FuturePotential.Bullish,
         patternType: PatternType.SingleCandle,
         parser: (candle: ICandle, pastCandles: ICandle[] = []): PatternResult | null => {
             if (
                 candle &&
                 candle.amplitudeStats &&
                 candle.candleType === CandleType.Green && 
-                candle.bodyWeight >= 35 &&
-                candle.topWickWeight <= 45 &&
+                candle.bodyWeight >= 30 &&
+                candle.bottomWickWeight >= 45 &&
                 candle.amplitudeStats.impact === CandleImpact.Critical &&
                 (candle.tradeCountStats.impact === CandleImpact.Critical ||
                     candle.priceMovementStats.impact === CandleImpact.Critical)
@@ -400,7 +400,8 @@ export const PATTERNS = [
                 candle &&
                 candle.amplitudeStats &&
                 candle.candleType === CandleType.Red && 
-                candle.bottomWickWeight <= 45 &&
+                candle.topWickWeight >= 45 &&
+                candle.bodyWeight >= 30 &&
                 candle.amplitudeStats.impact === CandleImpact.Critical &&
                 (candle.tradeCountStats.impact === CandleImpact.Critical ||
                     candle.priceMovementStats.impact === CandleImpact.Critical)
@@ -448,7 +449,7 @@ export const PATTERNS = [
                 currentCandle &&
                 currentCandle.candleType === CandleType.Green &&
                 currentCandle.close >= previousCandle.open &&
-                currentCandle.bodyWeight >= 60
+                currentCandle.bodyWeight >= 45
             ) {
                 return {
                     impact: candle.impact,

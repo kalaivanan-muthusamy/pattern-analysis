@@ -18,17 +18,39 @@ import Patterns from './components/Patterns';
 import { ICandle, processCandles } from './modules/candle';
 import ProcessedCandles from './components/CandleData';
 import { PatternResult, getCandlestickPatterns } from './modules/patterns';
+import { CandleImpact } from './modules/candle/constants';
+import dayjs, { Dayjs } from 'dayjs';
 
 const { RangePicker } = DatePicker;
 
-function App() {
-  const [formValue, setFormValue] = useState({
+interface IFormValues {
+  interval: string
+  symbol: string
+  timerange: [Dayjs, Dayjs] | null
+  candleLength: string
+}
+
+function getDefaultFormValues() {
+  const savedFormValues = localStorage.getItem("formValues");
+  let formValues: IFormValues = {
     interval: '8h',
     symbol: 'BTCUSDT',
     timerange: null,
     candleLength: '',
     showOnlyLastCandleResult: true,
-  });
+    ...(savedFormValues ? JSON.parse(savedFormValues) : {})
+  }
+  if (Array.isArray(formValues.timerange) && formValues.timerange.length > 0) {
+    const startTime = dayjs(formValues.timerange[0]);
+    const endTime = dayjs(formValues.timerange[0]);
+    formValues.timerange = [startTime, endTime];
+  }
+  return formValues;
+}
+
+function App() {
+
+  const [formValue, setFormValue] = useState(getDefaultFormValues());
   const [ohlc, setOHLC] = useState<null | Array<string | number>[]>(null);
   const [activeOHLC, setActiveOHLC] = useState<null | Array<string | number>[]>(null);
   const [candles, setCandles] = useState<null | ICandle[]>(null);
@@ -41,6 +63,10 @@ function App() {
   function onFormCheckboxChange(type, e) {
     setFormValue((current) => ({ ...current, [type]: e.target.checked }));
   }
+
+  useEffect(() => {
+    localStorage.setItem("formValues", JSON.stringify(formValue));
+  }, [formValue])
 
   async function onFinish() {
     const startTime = formValue.timerange?.[0]?.valueOf();
@@ -89,7 +115,11 @@ function App() {
     let patterns: any = [];
     candles.map((candle, index) => {
       const result = getCandlestickPatterns(candle, candles.slice(0, index));
-      patterns.push(result);
+      if (result.find(r => r?.result.impact === CandleImpact.High || r?.result.impact === CandleImpact.Critical)) {
+        patterns.push(result);
+      } else {
+        patterns.push([]);
+      }
     })
     setPatterns(patterns);
     setCandles(candles);
@@ -112,14 +142,12 @@ function App() {
                 </Form.Item>
                 <Form.Item label="Time Range">
                   <RangePicker
-                    showTime={{ format: 'HH' }}
+                    // showTime={{ format: 'HH' }}
                     // minuteStep={30}
                     showMinute={false}
-                    showHour={true}
-                    hourStep={2}
-                    format="YYYY-MM-DD HH"
+                    format="YYYY-MM-DD"
                     value={formValue.timerange}
-                    onChange={(value, dateString) => {
+                    onChange={(value) => {
                       setFormValue((current) => ({
                         ...current,
                         timerange: value,
