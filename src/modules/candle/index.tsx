@@ -109,7 +109,7 @@ export function formatCandle(candleValues: Array<string | number>): IBasicCandle
     };
 }
 
-export function processCandles(candleValues: Array<string | number>[], avgLength = 14): ICandle[] {
+export function processCandles(candleValues: Array<string | number>[], avgLength = 15): ICandle[] {
     const allCandles = candleValues.map(candle => formatCandle(candle)) as ICandle[];
 
     // Calculate the min, max and avg values for price movement, amplitude, trades and volume

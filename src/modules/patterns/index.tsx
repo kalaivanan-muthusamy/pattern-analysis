@@ -376,7 +376,7 @@ export const PATTERNS = [
             if (
                 candle &&
                 candle.amplitudeStats &&
-                candle.candleType === CandleType.Green && 
+                candle.candleType === CandleType.Green &&
                 candle.bodyWeight >= 30 &&
                 candle.bottomWickWeight >= 45 &&
                 candle.amplitudeStats.impact === CandleImpact.Critical &&
@@ -399,7 +399,7 @@ export const PATTERNS = [
             if (
                 candle &&
                 candle.amplitudeStats &&
-                candle.candleType === CandleType.Red && 
+                candle.candleType === CandleType.Red &&
                 candle.topWickWeight >= 45 &&
                 candle.bodyWeight >= 30 &&
                 candle.amplitudeStats.impact === CandleImpact.Critical &&
@@ -770,7 +770,7 @@ SINLE_CANDLE_PATTERNS.forEach((pattern) => {
 });
 
 export function getCandlestickPatterns(activeCandle: ICandle, pastCandles: ICandle[]) {
-    const matchedPatterns = PATTERNS.map(pattern => {
+    let matchedPatterns = PATTERNS.map(pattern => {
         const isMatch = pattern.parser(activeCandle, pastCandles)
         if (!isMatch) return null;
         return {
@@ -781,5 +781,38 @@ export function getCandlestickPatterns(activeCandle: ICandle, pastCandles: ICand
             result: isMatch
         }
     })
-    return matchedPatterns.filter(Boolean);
+    matchedPatterns = matchedPatterns.filter(Boolean);
+    if (
+        matchedPatterns.length === 0 &&
+        activeCandle.amplitudeStats &&
+        activeCandle.amplitudeStats.impact === CandleImpact.Critical &&
+        activeCandle.tradeCountStats.impact === CandleImpact.Critical &&
+        activeCandle.volumeStats.impact === CandleImpact.Critical
+    ) {
+        return [{
+            id: 'C001',
+            name: 'Critical Movement',
+            patternType: PatternType.SingleCandle,
+            FuturePotential: FuturePotential.Neutral,
+            result: {
+                impact: CandleImpact.Critical
+            }
+        }]
+    } else if (
+        matchedPatterns.length === 0 &&
+        activeCandle.tradeCountStats &&
+        (activeCandle.tradeCountStats.impact === CandleImpact.Critical ||
+            activeCandle.volumeStats.impact === CandleImpact.Critical)
+    ) {
+        return [{
+            id: 'C001',
+            name: 'Critical Volume',
+            patternType: PatternType.SingleCandle,
+            FuturePotential: FuturePotential.Neutral,
+            result: {
+                impact: CandleImpact.Critical
+            }
+        }]
+    }
+    return matchedPatterns;
 }
