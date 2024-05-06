@@ -616,7 +616,7 @@ export const PATTERNS = [
         },
     },
     /**
-     * Three Candle Strike (3 ICandle) - M003
+     * Three Candle Strike (3 Candle) - M003
      */
     {
         id: 'M003',
@@ -711,26 +711,26 @@ export const PATTERNS = [
 const SINLE_CANDLE_PATTERNS = PATTERNS.filter((pattern) => pattern.patternType === PatternType.SingleCandle);
 
 SINLE_CANDLE_PATTERNS.forEach((pattern) => {
-    // Two ICandle
+    // Two Candle
     const twoCandlePattern = { ...pattern };
     twoCandlePattern.id = `${pattern.id}-2`;
-    twoCandlePattern.name = `${pattern.name} (2 ICandle)`;
+    twoCandlePattern.name = `${pattern.name} (2 Candle)`;
     twoCandlePattern.patternType = PatternType.DoubleCandle;
     twoCandlePattern.parser = (candle: ICandle, pastCandles: ICandle[] = []) => {
         const currentCandle = candle;
         const pastCandle = pastCandles[pastCandles.length - 1];
         if (pattern.parser(currentCandle) && pattern.parser(pastCandle)) {
             return {
-                impact: CandleImpact.High,
+                impact: candle.impact,
             };
         }
         return null;
     };
     PATTERNS.push(twoCandlePattern);
-    // Three ICandle
+    // Three Candle
     const threeCandlePattern = { ...pattern };
     threeCandlePattern.id = `${pattern.id}-3`;
-    threeCandlePattern.name = `${pattern.name} (3 ICandle)`;
+    threeCandlePattern.name = `${pattern.name} (3 Candle)`;
     threeCandlePattern.patternType = PatternType.DoubleCandle;
     threeCandlePattern.parser = (candle: ICandle, pastCandles: ICandle[] = []) => {
         const firstCandle = pastCandles[pastCandles.length - 2];
@@ -738,16 +738,16 @@ SINLE_CANDLE_PATTERNS.forEach((pattern) => {
         const currentCandle = candle;
         if (pattern.parser(firstCandle) && pattern.parser(secondCandle) && pattern.parser(currentCandle)) {
             return {
-                impact: CandleImpact.High,
+                impact: candle.impact,
             };
         }
         return null;
     };
     PATTERNS.push(threeCandlePattern);
-    // Four ICandle
+    // Four Candle
     const fourCandlePattern = { ...pattern };
     fourCandlePattern.id = `${pattern.id}-4`;
-    fourCandlePattern.name = `${pattern.name} (4 ICandle)`;
+    fourCandlePattern.name = `${pattern.name} (4 Candle)`;
     fourCandlePattern.patternType = PatternType.DoubleCandle;
     fourCandlePattern.parser = (candle: ICandle, pastCandles: ICandle[] = []) => {
         const firstCandle = pastCandles[pastCandles.length - 3];
@@ -761,7 +761,7 @@ SINLE_CANDLE_PATTERNS.forEach((pattern) => {
             pattern.parser(currentCandle)
         ) {
             return {
-                impact: CandleImpact.High,
+                impact: candle.impact,
             };
         }
         return null;
