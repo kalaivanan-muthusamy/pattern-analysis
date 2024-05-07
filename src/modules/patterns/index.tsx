@@ -50,7 +50,7 @@ export const CORE_PATTERNS = {
             candle &&
             candle.bodyWeight >= 5 &&
             candle.bodyWeight <= 30 &&
-            candle.bottomWickWeight <= 10 &&
+            candle.bottomWickWeight <= 15 &&
             candle.topWickWeight >= 65
         );
     },
@@ -128,7 +128,7 @@ export const PATTERNS = [
         name: 'Dragonfly Doji',
         futurePotential: FuturePotential.Bullish,
         patternType: PatternType.SingleCandle,
-        parser: (candle: ICandle, pastCandles: ICandle[] = []): PatternResult | null => {
+        parser: (candle: ICandle): PatternResult | null => {
             if (CORE_PATTERNS.DragonflyDoji(candle)) {
                 return {
                     impact: candle.impact,
@@ -153,7 +153,7 @@ export const PATTERNS = [
         name: 'Gravestone Doji',
         futurePotential: FuturePotential.Bearish,
         patternType: PatternType.SingleCandle,
-        parser: (candle: ICandle, pastCandles: ICandle[] = []): PatternResult | null => {
+        parser: (candle: ICandle): PatternResult | null => {
             if (CORE_PATTERNS.GravestoneDoji(candle)) {
                 return {
                     impact: candle.impact,
@@ -178,7 +178,7 @@ export const PATTERNS = [
         name: 'Long-Legged Doji',
         futurePotential: FuturePotential.Neutral,
         patternType: PatternType.SingleCandle,
-        parser: (candle: ICandle, pastCandles: ICandle[] = []): PatternResult | null => {
+        parser: (candle: ICandle): PatternResult | null => {
             if (CORE_PATTERNS.LongLeggedDoji(candle)) {
                 return {
                     impact: candle.impact,
@@ -217,7 +217,7 @@ export const PATTERNS = [
         name: 'Hammer',
         futurePotential: FuturePotential.Bullish,
         patternType: PatternType.SingleCandle,
-        parser: (candle: ICandle, pastCandles: ICandle[] = []): PatternResult | null => {
+        parser: (candle: ICandle): PatternResult | null => {
             if (CORE_PATTERNS.Hammer(candle)) {
                 return {
                     impact: candle.impact,
@@ -243,7 +243,7 @@ export const PATTERNS = [
         name: 'Inverse Hammer',
         futurePotential: FuturePotential.Bearish,
         patternType: PatternType.SingleCandle,
-        parser: (candle: ICandle, pastCandles: ICandle[] = []): PatternResult | null => {
+        parser: (candle: ICandle): PatternResult | null => {
             if (CORE_PATTERNS.InverseHammer(candle)) {
                 return {
                     impact: candle.impact,
@@ -270,7 +270,7 @@ export const PATTERNS = [
         name: 'Spinning Top',
         futurePotential: FuturePotential.Neutral,
         patternType: PatternType.SingleCandle,
-        parser: (candle: ICandle, pastCandles: ICandle[] = []): PatternResult | null => {
+        parser: (candle: ICandle): PatternResult | null => {
             if (CORE_PATTERNS.SpinningTop(candle)) {
                 return {
                     impact: candle.impact,
@@ -296,7 +296,7 @@ export const PATTERNS = [
         name: 'White Marubozu',
         futurePotential: FuturePotential.Bullish,
         patternType: PatternType.SingleCandle,
-        parser: (candle: ICandle, pastCandles: ICandle[] = []): PatternResult | null => {
+        parser: (candle: ICandle): PatternResult | null => {
             if (CORE_PATTERNS.WhiteMarubozu(candle)) {
                 return {
                     impact: candle.impact,
@@ -322,7 +322,7 @@ export const PATTERNS = [
         name: 'Red Marubozu',
         futurePotential: FuturePotential.Bearish,
         patternType: PatternType.SingleCandle,
-        parser: (candle: ICandle, pastCandles: ICandle[] = []): PatternResult | null => {
+        parser: (candle: ICandle): PatternResult | null => {
             if (CORE_PATTERNS.RedMarubozu(candle)) {
                 return {
                     impact: candle.impact,
@@ -336,11 +336,11 @@ export const PATTERNS = [
         name: 'Support',
         futurePotential: FuturePotential.Bullish,
         patternType: PatternType.SingleCandle,
-        parser: (candle: ICandle, pastCandles: ICandle[] = []): PatternResult | null => {
+        parser: (candle: ICandle): PatternResult | null => {
             if (
                 candle &&
                 candle.bottomWickWeight >= 50 &&
-                candle.bodyWeight >= 25
+                (candle.candleType === CandleType.Green ? candle.bodyWeight >= 25 : candle.bodyWeight <= 35)
             ) {
                 return {
                     impact: candle.impact,
@@ -354,11 +354,11 @@ export const PATTERNS = [
         name: 'Rejection',
         futurePotential: FuturePotential.Bearish,
         patternType: PatternType.SingleCandle,
-        parser: (candle: ICandle, pastCandles: ICandle[] = []): PatternResult | null => {
+        parser: (candle: ICandle): PatternResult | null => {
             if (
                 candle &&
                 candle.topWickWeight >= 50 &&
-                candle.bodyWeight >= 25
+                (candle.candleType === CandleType.Red ? candle.bodyWeight >= 25 : candle.bodyWeight <= 35)
             ) {
                 return {
                     impact: candle.impact,
@@ -372,7 +372,7 @@ export const PATTERNS = [
         name: 'Critical Support',
         futurePotential: FuturePotential.Bullish,
         patternType: PatternType.SingleCandle,
-        parser: (candle: ICandle, pastCandles: ICandle[] = []): PatternResult | null => {
+        parser: (candle: ICandle): PatternResult | null => {
             if (
                 candle &&
                 candle.amplitudeStats &&
@@ -395,13 +395,13 @@ export const PATTERNS = [
         name: 'Critical Rejection',
         futurePotential: FuturePotential.Bearish,
         patternType: PatternType.SingleCandle,
-        parser: (candle: ICandle, pastCandles: ICandle[] = []): PatternResult | null => {
+        parser: (candle: ICandle): PatternResult | null => {
             if (
                 candle &&
                 candle.amplitudeStats &&
                 candle.candleType === CandleType.Red &&
-                candle.topWickWeight >= 45 &&
                 candle.bodyWeight >= 30 &&
+                candle.topWickWeight >= 45 &&
                 candle.amplitudeStats.impact === CandleImpact.Critical &&
                 (candle.tradeCountStats.impact === CandleImpact.Critical ||
                     candle.priceMovementStats.impact === CandleImpact.Critical)
