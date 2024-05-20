@@ -793,7 +793,7 @@ export function getCandlestickPatterns(activeCandle: ICandle, pastCandles: ICand
             id: 'C001',
             name: 'Critical Movement',
             patternType: PatternType.SingleCandle,
-            FuturePotential: FuturePotential.Neutral,
+            futurePotential: FuturePotential.Neutral,
             result: {
                 impact: CandleImpact.Critical
             }
@@ -805,10 +805,10 @@ export function getCandlestickPatterns(activeCandle: ICandle, pastCandles: ICand
             activeCandle.volumeStats.impact === CandleImpact.Critical)
     ) {
         return [{
-            id: 'C001',
+            id: 'C002',
             name: 'Critical Volume',
             patternType: PatternType.SingleCandle,
-            FuturePotential: FuturePotential.Neutral,
+            futurePotential: FuturePotential.Neutral,
             result: {
                 impact: CandleImpact.Critical
             }

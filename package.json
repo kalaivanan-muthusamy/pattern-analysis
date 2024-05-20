@@ -10,13 +10,15 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@ant-design/icons": "^5.3.7",
     "antd": "^5.16.4",
     "axios": "^1.6.8",
     "dayjs": "^1.11.11",
     "react": "^18.2.0",
     "react-apexcharts": "^1.4.1",
     "react-dom": "^18.2.0",
-    "react-router-dom": "^6.23.1"
+    "react-router-dom": "^6.23.1",
+    "sass": "^1.77.2"
   },
   "devDependencies": {
     "@types/react": "^18.2.79",

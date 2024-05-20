@@ -1,48 +1,30 @@
-import { RouterProvider, createBrowserRouter } from "react-router-dom";
+import { BrowserRouter, Route, Routes } from "react-router-dom";
 import Analysis from "./pages/analysis";
-import { Layout, Menu } from "antd";
+import { Layout } from "antd";
+import { Signals } from "./pages/signals";
+import TopNav from "./components/header";
 
-
-const { Header, Content, Footer } = Layout;
-
-const router = createBrowserRouter([
-  {
-    path: "/",
-    element: <Analysis />,
-  },
-]);
-
-const items = [
-  {
-    key: 'analysis',
-    label: 'Analysis'
-  },
-  {
-    key: 'signal',
-    label: 'Signal'
-  }
-];
+const { Content, Footer } = Layout;
 
 function App() {
   return (
-    <Layout>
-      <Header style={{ display: 'flex', alignItems: 'center' }}>
-        <div className="color-white"><h2>TradingWinds Analytics</h2></div>
-        <Menu
-          theme="dark"
-          mode="horizontal"
-          defaultSelectedKeys={['2']}
-          items={items}
-          style={{ flex: 1, minWidth: 0 }}
-        />
-      </Header>
-      <Content style={{ padding: '0 48px' }}>
-        <RouterProvider router={router} />
-      </Content>
-      <Footer style={{ textAlign: 'center' }}>
-        Ant Design ©{new Date().getFullYear()} Created by Ant UED
-      </Footer>
-    </Layout>
+    <BrowserRouter>
+      <Layout>
+        <TopNav />
+        <Content style={{ padding: '24px 48px' }}>
+          <Routes>
+            <Route path="/" >
+              <Route index element={<Analysis />} />
+              <Route path="/analysis" element={<Analysis />} />
+            </Route>
+            <Route path="/signal" element={<Signals />} />
+          </Routes>
+        </Content>
+        <Footer style={{ textAlign: 'center' }}>
+          TradingWinds Analytics ©{new Date().getFullYear()} Created by Kalai
+        </Footer>
+      </Layout>
+    </BrowserRouter>
   );
 }
 

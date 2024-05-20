@@ -22,6 +22,7 @@ import { CandleImpact } from '../../modules/candle/constants';
 import dayjs, { Dayjs } from 'dayjs';
 
 const { RangePicker } = DatePicker;
+const Option = Select.Option
 
 interface IFormValues {
     interval: string
@@ -115,106 +116,105 @@ function Analysis() {
         let patterns: any = [];
         candles.map((candle, index) => {
             const result = getCandlestickPatterns(candle, candles.slice(0, index));
-            if (result.find(r => r?.result.impact === CandleImpact.High || r?.result.impact === CandleImpact.Critical)) {
-                patterns.push(result);
-            } else {
-                patterns.push([]);
-            }
+            // if (result.find(r => r?.result.impact === CandleImpact.High || r?.result.impact === CandleImpact.Critical)) {
+            //     patterns.push(result);
+            // } else {
+            //     patterns.push([]);
+            // }
+            patterns.push(result);
         })
         setPatterns(patterns);
         setCandles(candles);
     }
 
     return (
-        <Layout>
-            <Content style={{ padding: '24px 24px' }}>
-                <Title>Pattern Analysis</Title>
-                <Row>
-                    <Col sm={24}>
-                        <Card>
-                            <Form layout="inline" onFinish={onFinish}>
-                                <Form.Item label="Symbol">
-                                    <Input
-                                        placeholder="BTCUSDT"
-                                        value={formValue.symbol}
-                                        onChange={(e) => onFormInputChange('symbol', e)}
-                                    />
-                                </Form.Item>
-                                <Form.Item label="Time Range">
-                                    <RangePicker
-                                        // showTime={{ format: 'HH' }}
-                                        // minuteStep={30}
-                                        showMinute={false}
-                                        format="YYYY-MM-DD"
-                                        value={formValue.timerange}
-                                        onChange={(value) => {
-                                            setFormValue((current) => ({
-                                                ...current,
-                                                timerange: value,
-                                            }));
-                                        }}
-                                    />
-                                </Form.Item>
-                                <Form.Item label="interval" rules={[{ required: true }]}>
-                                    <Select
-                                        value={formValue.interval}
-                                        placeholder="Select interval"
-                                        onChange={(value) =>
-                                            setFormValue((current) => ({
-                                                ...current,
-                                                interval: value,
-                                            }))
-                                        }
-                                    >
-                                        <Option value="4h">4h</Option>
-                                        <Option value="8h">8h</Option>
-                                        <Option value="1d">1d</Option>
-                                        <Option value="3d">3d</Option>
-                                        <Option value="1w">1w</Option>
-                                        <Option value="1M">1M</Option>
-                                    </Select>
-                                </Form.Item>
-                                <Form.Item>
-                                    <Button htmlType="submit" type="primary">
-                                        Analyse
-                                    </Button>
-                                </Form.Item>
-                            </Form>
-                            <Form style={{ marginTop: '20px' }} layout="inline" >
-                                <Form.Item label="Candle Length">
-                                    <Input
-                                        size='small'
-                                        placeholder="0,-1"
-                                        value={formValue.candleLength}
-                                        onChange={(e) => onFormInputChange('candleLength', e)}
-                                    />
-                                </Form.Item>
-                                <Form.Item label="Show last candle result only ">
-                                    <Input
-                                        type="checkbox"
-                                        checked={formValue.showOnlyLastCandleResult}
-                                        onChange={(e) => onFormCheckboxChange('showOnlyLastCandleResult', e)}
+        <>
+            <Title level={4}>Pattern Analysis</Title>
+            <Row>
+                <Col sm={24}>
+                    <Card>
+                        <Form layout="inline" onFinish={onFinish}>
+                            <Form.Item label="Symbol">
+                                <Input
+                                    placeholder="BTCUSDT"
+                                    value={formValue.symbol}
+                                    onChange={(e) => onFormInputChange('symbol', e)}
+                                />
+                            </Form.Item>
+                            <Form.Item label="Time Range">
+                                <RangePicker
+                                    // showTime={{ format: 'HH' }}
+                                    // minuteStep={30}
+                                    showMinute={false}
+                                    format="YYYY-MM-DD"
+                                    value={formValue.timerange}
+                                    onChange={(value) => {
+                                        setFormValue((current) => ({
+                                            ...current,
+                                            timerange: value,
+                                        }));
+                                    }}
+                                />
+                            </Form.Item>
+                            <Form.Item label="interval" rules={[{ required: true }]}>
+                                <Select
+                                    value={formValue.interval}
+                                    placeholder="Select interval"
+                                    onChange={(value) =>
+                                        setFormValue((current) => ({
+                                            ...current,
+                                            interval: value,
+                                        }))
+                                    }
+                                >
+                                    <Option value="4h">4h</Option>
+                                    <Option value="8h">8h</Option>
+                                    <Option value="1d">1d</Option>
+                                    <Option value="3d">3d</Option>
+                                    <Option value="1w">1w</Option>
+                                    <Option value="1M">1M</Option>
+                                </Select>
+                            </Form.Item>
+                            <Form.Item>
+                                <Button htmlType="submit" type="primary">
+                                    Analyse
+                                </Button>
+                            </Form.Item>
+                        </Form>
+                        <Form style={{ marginTop: '20px' }} layout="inline" >
+                            <Form.Item label="Candle Length">
+                                <Input
+                                    size='small'
+                                    placeholder="0,-1"
+                                    value={formValue.candleLength}
+                                    onChange={(e) => onFormInputChange('candleLength', e)}
+                                />
+                            </Form.Item>
+                            <Form.Item label="Show last candle result only ">
+                                <Input
+                                    type="checkbox"
+                                    checked={formValue.showOnlyLastCandleResult}
+                                    onChange={(e) => onFormCheckboxChange('showOnlyLastCandleResult', e)}
 
-                                    />
-                                </Form.Item>
-                            </Form>
-                        </Card>
-                    </Col>
-                </Row>
+                                />
+                            </Form.Item>
+                        </Form>
+                    </Card>
+                </Col>
+            </Row>
 
-                <Row gutter={8} style={{ marginTop: '30px' }}>
-                    <Col sm={12}>
-                        <Chart data={activeOHLC} />
-                    </Col>
-                    <Col sm={5}>
-                        <Patterns data={patterns} />
-                    </Col>
-                    <Col sm={7}>
-                        <ProcessedCandles data={formValue.showOnlyLastCandleResult ? candles?.slice(-1) : candles} />
-                    </Col>
-                </Row>
-            </Content>
-        </Layout>
+            <Row gutter={8} style={{ marginTop: '30px' }}>
+                <Col sm={12}>
+                    <Chart data={activeOHLC} />
+                </Col>
+                <Col sm={5}>
+                    <Patterns data={patterns} />
+                </Col>
+                <Col sm={7}>
+                    <ProcessedCandles data={formValue.showOnlyLastCandleResult ? candles?.slice(-1) : candles} />
+                </Col>
+            </Row>
+        </>
     );
 }
 
