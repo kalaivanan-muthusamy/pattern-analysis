@@ -8,7 +8,7 @@ const { Content, Footer } = Layout;
 
 function App() {
   return (
-    <BrowserRouter>
+    <BrowserRouter basename={import.meta.env.VITE_BASE_URL || '/'}>
       <Layout>
         <TopNav />
         <Content style={{ padding: '24px 48px' }}>

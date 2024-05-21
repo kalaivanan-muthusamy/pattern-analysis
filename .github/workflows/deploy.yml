@@ -3,6 +3,8 @@ on:
   push:
     branches:
       - main  # Trigger the workflow on push to the main branch
+env:
+  VITE_BASE_URL: 'pattern-analysis'
 
 jobs:
   build:
