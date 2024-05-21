@@ -1,8 +1,8 @@
 import { Card } from 'antd';
 import ReactApexChart from 'react-apexcharts';
 
-export default function Chart({ data }) {
-  const options = {
+export default function Chart({ data }: { data: any[] }) {
+  const options: ApexCharts.ApexOptions = {
     chart: {
       type: 'candlestick',
       height: 350,

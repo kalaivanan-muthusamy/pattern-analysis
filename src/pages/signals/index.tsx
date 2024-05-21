@@ -20,6 +20,13 @@ interface IFormValues {
     impactFilter: CandleImpact[],
 }
 
+interface Pattern {
+    pattern: string
+    patternType: string,
+    impact: string,
+    matchedAssets: string[]
+}
+
 function getDefaultFormValues() {
     const savedFormValues = localStorage.getItem(LSKey);
     let formValues: IFormValues = {
@@ -39,7 +46,7 @@ function getDefaultFormValues() {
 export function Signals() {
     const [formValue, setFormValue] = useState(getDefaultFormValues());
     const [, setKlines] = useState({});
-    const [patterns, setPatterns] = useState([]);
+    const [patterns, setPatterns] = useState<Pattern[]>([]);
 
     useEffect(() => {
         localStorage.setItem(LSKey, JSON.stringify(formValue));
@@ -86,7 +93,7 @@ export function Signals() {
                 const key = `${pattern.name} (${pattern.result.impact})`;
                 if (formattedPatterns[key]) {
                     formattedPatterns[key].matchedAssets.push(asset);
-                    formattedPatterns[key].matchedAssets = formattedPatterns[key].matchedAssets.sort((a, b) => a > b ? 1 : a < b ? -1 : 0);
+                    formattedPatterns[key].matchedAssets = formattedPatterns[key].matchedAssets.sort((a: string, b: string) => a > b ? 1 : a < b ? -1 : 0);
                 } else {
                     formattedPatterns[key] = {
                         pattern: pattern.name,
@@ -101,7 +108,6 @@ export function Signals() {
     }
 
     function displayPatterns() {
-        console.log(patterns);
         const bullishPatterns = patterns.filter(pattern => pattern.patternType === FuturePotential.Bullish);
         const neutralPatterns = patterns.filter(pattern => pattern.patternType === FuturePotential.Neutral);
         const bearishPatterns = patterns.filter(pattern => pattern.patternType === FuturePotential.Bearish);
@@ -131,7 +137,7 @@ export function Signals() {
         )
     }
 
-    function patternByImpact(patterns: any) {
+    function patternByImpact(patterns: Pattern[]) {
         const criticalPatterns = patterns.filter(p => p.impact === CandleImpact.Critical);
         const highPatterns = patterns.filter(p => p.impact === CandleImpact.High);
         const mediumPatterns = patterns.filter(p => p.impact === CandleImpact.Medium);
@@ -209,7 +215,7 @@ export function Signals() {
                                     onChange={(value) => {
                                         setFormValue((current) => ({
                                             ...current,
-                                            timerange: value,
+                                            timerange: value as [Dayjs, Dayjs],
                                         }));
                                     }}
                                 />

@@ -7,10 +7,8 @@ import {
     DatePicker,
     Select,
     Button,
-    Layout,
     Card,
 } from 'antd';
-import { Content } from 'antd/es/layout/layout';
 import Title from 'antd/es/typography/Title';
 import axios from 'axios';
 import Chart from '../../components/Chart';
@@ -18,7 +16,6 @@ import Patterns from '../../components/Patterns';
 import { ICandle, processCandles } from '../../modules/candle';
 import ProcessedCandles from '../../components/CandleData';
 import { PatternResult, getCandlestickPatterns } from '../../modules/patterns';
-import { CandleImpact } from '../../modules/candle/constants';
 import dayjs, { Dayjs } from 'dayjs';
 
 const { RangePicker } = DatePicker;
@@ -29,6 +26,7 @@ interface IFormValues {
     symbol: string
     timerange: [Dayjs, Dayjs] | null
     candleLength: string
+    showOnlyLastCandleResult: boolean
 }
 
 function getDefaultFormValues() {
@@ -57,11 +55,11 @@ function Analysis() {
     const [candles, setCandles] = useState<null | ICandle[]>(null);
     const [patterns, setPatterns] = useState<Array<PatternResult | null> | null>(null)
 
-    function onFormInputChange(type, e) {
+    function onFormInputChange(type: string, e: React.ChangeEvent<HTMLInputElement>) {
         setFormValue((current) => ({ ...current, [type]: e.target.value }));
     }
 
-    function onFormCheckboxChange(type, e) {
+    function onFormCheckboxChange(type: string, e: React.ChangeEvent<HTMLInputElement>) {
         setFormValue((current) => ({ ...current, [type]: e.target.checked }));
     }
 
@@ -151,7 +149,7 @@ function Analysis() {
                                     onChange={(value) => {
                                         setFormValue((current) => ({
                                             ...current,
-                                            timerange: value,
+                                            timerange: value as [Dayjs, Dayjs],
                                         }));
                                     }}
                                 />
@@ -205,7 +203,7 @@ function Analysis() {
 
             <Row gutter={8} style={{ marginTop: '30px' }}>
                 <Col sm={12}>
-                    <Chart data={activeOHLC} />
+                    <Chart data={activeOHLC || []} />
                 </Col>
                 <Col sm={5}>
                     <Patterns data={patterns} />
