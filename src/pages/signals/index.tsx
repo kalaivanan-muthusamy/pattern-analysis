@@ -25,6 +25,7 @@ function getDefaultFormValues() {
     let formValues: IFormValues = {
         timeframe: '8h',
         timerange: null,
+        impactFilter: [CandleImpact.Critical],
         ...(savedFormValues ? JSON.parse(savedFormValues) : {})
     }
     if (Array.isArray(formValues.timerange) && formValues.timerange.length > 0) {
@@ -138,28 +139,28 @@ export function Signals() {
 
         return (
             <>
-                {formValue.impactFilter.includes(CandleImpact.Critical) && criticalPatterns.length > 0 && criticalPatterns.map(pattern => (
+                {formValue.impactFilter?.includes(CandleImpact.Critical) && criticalPatterns.length > 0 && criticalPatterns.map(pattern => (
                     <div style={{ marginTop: '15px' }}>
                         <h4 style={{ textDecoration: 'underline' }}>{pattern.pattern} (Critical)</h4>
                         <p>{pattern.matchedAssets.join(", ")}</p>
                     </div>
 
                 ))}
-                {formValue.impactFilter.includes(CandleImpact.High) && highPatterns.length > 0 && highPatterns.map(pattern => (
+                {formValue.impactFilter?.includes(CandleImpact.High) && highPatterns.length > 0 && highPatterns.map(pattern => (
                     <div style={{ marginTop: '15px' }}>
                         <h4>{pattern.pattern} (High)</h4>
                         <p>{pattern.matchedAssets.join(", ")}</p>
                     </div>
 
                 ))}
-                {formValue.impactFilter.includes(CandleImpact.Medium) && mediumPatterns.length > 0 && mediumPatterns.map(pattern => (
+                {formValue.impactFilter?.includes(CandleImpact.Medium) && mediumPatterns.length > 0 && mediumPatterns.map(pattern => (
                     <div style={{ marginTop: '15px' }}>
                         <h4>{pattern.pattern} (Medium)</h4>
                         <p>{pattern.matchedAssets.join(", ")}</p>
                     </div>
 
                 ))}
-                {formValue.impactFilter.includes(CandleImpact.Low) && lowPatterns.length > 0 && lowPatterns.map(pattern => (
+                {formValue.impactFilter?.includes(CandleImpact.Low) && lowPatterns.length > 0 && lowPatterns.map(pattern => (
                     <div style={{ marginTop: '15px' }}>
                         <h4>{pattern.pattern} (Low)</h4>
                         <p>{pattern.matchedAssets.join(", ")}</p>
