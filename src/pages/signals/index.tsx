@@ -80,9 +80,12 @@ export function Signals() {
             const kline = Object.values(klineObj)[0] as (string | number)[][];
             const candles = processCandles(kline);
             const activeCandle = candles[candles.length - 2];
-            const pastCandles = candles.slice(0, -2);
-            const patterns = getCandlestickPatterns(activeCandle, pastCandles);
-            allPatterns.push({ [asset]: patterns })
+            if (activeCandle) {
+                const pastCandles = candles.slice(0, -2);
+                console.log(candles, activeCandle);
+                const patterns = getCandlestickPatterns(activeCandle, pastCandles);
+                allPatterns.push({ [asset]: patterns })
+            }
         })
 
         const formattedPatterns: any = {};
